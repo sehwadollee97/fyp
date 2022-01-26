@@ -1,0 +1,14 @@
+from typing import Hashable
+from cv2 import HISTCMP_BHATTACHARYYA
+
+# regular expression
+abcdefghijklmnopqurstvwxyz
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+1234567890
+Ha HI
+ANXSACCA.SDSDNAJSONDJA
+
+
+#LITERAL SEARCH
+
+#PATTERN SEARCH

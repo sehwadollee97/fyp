@@ -8,6 +8,7 @@
 #following the read write file for setup
 import os
 import matplotlib.pyplot as plt
+import time
 if os.name == 'nt':
     import msvcrt
     def getch():
@@ -39,14 +40,14 @@ ADDR_SCS_LOAD = 60 # The current load address added
 # Default setting
 SCS_ID                      = 14                 # SCServo ID : 1
 BAUDRATE                    = 1000000           # SCServo default baudrate : 1000000
-DEVICENAME                  = '/dev/ttyUSB2'    # Check which port is being used on your controller
+DEVICENAME                  = '/dev/ttyUSB1'    # Check which port is being used on your controller
                                                 # ex) Windows: "COM1"   Linux: "/dev/ttyUSB0" Mac: "/dev/tty.usbserial-*"
 
 SCS_MINIMUM_POSITION_VALUE  = 800       # SCServo will rotate between this value
 SCS_MAXIMUM_POSITION_VALUE  = 601       # and this value (note that the SCServo would not move when the position value is out of movable range. Check e-manual about the range of the SCServo you use.)
 SCS_MOVING_STATUS_THRESHOLD = 20          # SCServo moving status threshold
-SCS_MOVING_SPEED            = 0           # SCServo moving speed
-SCS_MOVING_ACC              = 0           # SCServo moving acc
+SCS_MOVING_SPEED            = 1           # SCServo moving speed
+SCS_MOVING_ACC              = 1           # SCServo moving acc
 protocol_end                = 1            # SCServo bit end(STS/SMS=0, SCS=1)
 
 index = 0
@@ -98,27 +99,33 @@ if scs_comm_result != COMM_SUCCESS:
 elif scs_error != 0:
     print("%s" % packetHandler.getRxPacketError(scs_error))
 
-while 1:
+def get_feedback():
+    data_read, results, error = packetHandler.readTxRx(portHandler, SCS_ID, ADDR_SCS_PRESENT_POSITION, 15)
+    if len(data_read) ==  15:
+        state = {
+            'time': time.time(), # Time of feedback capture
+            'position': SCS_MAKEWORD(data_read[0], data_read[1]),
+            'speed':  SCS_TOHOST(SCS_MAKEWORD(data_read[2], data_read[3]),15),
+            'load': SCS_MAKEWORD(data_read[4], data_read[5])/1000.0,
+            'voltage': data_read[6]/10.0,
+            'temperature': data_read[7],
+            'status': data_read[9],
+            'moving': data_read[10],
+            'current': SCS_MAKEWORD(data_read[13], data_read[14]),
+            }
+    return state,results,error
+scs_comm_result, scs_error = packetHandler.write2ByteTxRx(portHandler, SCS_ID, ADDR_SCS_GOAL_POSITION, 400)
+time.sleep(0.1)
+state,__,__ = get_feedback()
+print(state["position"])
+portHandler.closePort()
+time.sleep(5)
+portHandler.openPort()
+state,__,__ = get_feedback()
+print(state["position"])
+
     
-    scs_present_position_speed, scs_comm_result, scs_error = packetHandler.read4ByteTxRx(portHandler, SCS_ID, ADDR_SCS_PRESENT_POSITION)
-    while scs_comm_result != COMM_SUCCESS:
-        scs_present_position_speed, scs_comm_result, scs_error = packetHandler.read4ByteTxRx(portHandler, SCS_ID, ADDR_SCS_PRESENT_POSITION)
-    load, result, error = packetHandler.read1ByteTxRx(portHandler,SCS_ID,60)
-    scs_present_position = SCS_LOWORD(scs_present_position_speed)
-    scs_present_speed = SCS_HIWORD(scs_present_position_speed)  
-    goal = scs_present_position+30
-    scs_comm_result, scs_error = packetHandler.write2ByteTxRx(portHandler, SCS_ID, ADDR_SCS_GOAL_POSITION, goal)
-    if scs_comm_result != COMM_SUCCESS:
-        print("%s" % packetHandler.getTxRxResult(scs_comm_result))
-    elif scs_error != 0:
-        print("%s" % packetHandler.getRxPacketError(scs_error))
-    x_axis.append(scs_present_position)
-    y_axis.append(load)
-    print("[ID:%03d] GoalPos:%03d PresPos:%03d LOAD:%03d PresSpd:%03d" 
-        % (SCS_ID, scs_goal_position[index], scs_present_position, load, SCS_TOHOST(scs_present_speed, 15)))
-    print("position difference", abs(SCS_MINIMUM_POSITION_VALUE - scs_present_position_speed))
-    if(abs(SCS_MINIMUM_POSITION_VALUE - scs_present_position_speed) < SCS_MOVING_STATUS_THRESHOLD):
-        break
+    
 
 
 if scs_comm_result != COMM_SUCCESS:

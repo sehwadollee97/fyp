@@ -12,6 +12,8 @@ from typing import Counter
 import matplotlib.pyplot as plt
 import os
 import time
+import random
+#import pylab as pl
 if os.name == 'nt':
     import msvcrt
     def getch():
@@ -126,6 +128,7 @@ while 1:
     #    break
 
     # Write SCServo goal position
+    scs_goal_position = random.randint(330,650)
     scs_comm_result, scs_error = packetHandler.write2ByteTxRx(portHandler, SCS_ID, ADDR_SCS_GOAL_POSITION, scs_goal_position)
     if scs_comm_result != COMM_SUCCESS:
         print("%s" % packetHandler.getTxRxResult(scs_comm_result))
@@ -176,29 +179,34 @@ while 1:
     
     state_count = 0
     
-    #if load >= 1000:
-    #   load -=1000
+    if load >= 1000:
+       load -=1000
     
     #if load >= 300:
     #    break
-    if load >= 1300: 
-        break
-    if scs_present_position <= 450:
-        break
+
+    #if load >= 1300: 
+    #    break
+    #if scs_present_position <= 450:
+    #    break
     print("[ID:%03d] GoalPos:%03d PresPos:%03d LOAD:%03d PresSpd:%03d" 
         % (SCS_ID, scs_goal_position, scs_present_position, load, SCS_TOHOST(scs_present_speed, 15)))
     print("position difference", abs(scs_goal_position - scs_present_position))
     z_axis.append(load)
     #x_axis.append(temp_count)
     y_axis.append(scs_present_position)
-
+    
+    if len(y_axis) >= 30:
+        break
     if scs_present_position == prev_position:
         count = count+1
     if count >= 10:    
-        scs_goal_position = scs_goal_position-10
+        scs_goal_position = random.randint(330,650)
+        #scs_goal_position = scs_goal_position-10
     prev_position = scs_present_position
     if abs(scs_present_position - scs_goal_position) <= SCS_MOVING_STATUS_THRESHOLD:         
-        scs_goal_position = scs_goal_position-10
+        scs_goal_position = random.randint(330,650)
+        #scs_goal_position = scs_goal_position-10
         
 
 
@@ -209,9 +217,12 @@ elif scs_error != 0:
     print("%s" % packetHandler.getRxPacketError(scs_error))
 # Close port
 portHandler.closePort()
-fig, axs = plt.subplots(2)
+#fig, axs = plt.subplots(2)
 #fig.suptitle('Vertically stacked subplots')
 #axs[0].plot(x_axis, y_axis)
 #axs[1].plot(x_axis, z_axis)
-axs[0].plot(y_axis,z_axis)
+#axs[0].plot(y_axis,z_axis)
+plt.plot(y_axis,z_axis,'o')
 plt.show()
+#pl.plot(y_axis,z_axis)
+#pl.show()
