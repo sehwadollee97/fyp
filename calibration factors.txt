@@ -1,0 +1,29 @@
+left tilt values
+average ab: 
+[[0.]
+ [0.]]
+average cd: 
+ [[-0.02719448]
+ [ 1.87800445]]
+ 
+left pan values
+average ab: 
+[[-1.54107526]
+ [-0.55463894]]
+average cd: 
+ [[0.]
+ [0.]]
+right tilt values
+average ab: 
+[[0.]
+ [0.]]
+average cd: 
+ [[-1.62534217]
+ [ 1.67933052]]
+right pan values
+average ab: 
+[[-0.31261875]
+ [ 0.01375547]]
+average cd: 
+ [[0.]
+ [0.]]
